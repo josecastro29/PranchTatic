@@ -10,17 +10,19 @@ const clearBtn = document.getElementById('clearBtn');
 const undoBtn = document.getElementById('undoBtn');
 const addRedPlayerBtn = document.getElementById('addRedPlayerBtn');
 const addBluePlayerBtn = document.getElementById('addBluePlayerBtn');
+const addBallBtn = document.getElementById('addBallBtn');
 const drawBtn = document.getElementById('drawBtn');
 const eraserBtn = document.getElementById('eraserBtn');
 const colorPicker = document.getElementById('colorPicker');
 const brushSize = document.getElementById('brushSize');
 
 // State
-let mode = 'redPlayer'; // redPlayer, bluePlayer, draw, erase
+let mode = 'redPlayer'; // redPlayer, bluePlayer, ball, draw, erase
 let isDrawing = false;
 let players = [];
 let redPlayerCount = 0;
 let bluePlayerCount = 0;
+let ball = null;
 let drawingHistory = [];
 let currentPath = [];
 
@@ -31,6 +33,7 @@ function resizeCanvas() {
     fieldCanvas.height = rect.height;
     drawingCanvas.width = rect.width;
     drawingCanvas.height = rect.height;
+    console.log('Canvas resized:', rect.width, 'x', rect.height);
     drawField();
     redrawAll();
 }
@@ -100,13 +103,16 @@ function drawField() {
 // Mode switching
 function setMode(newMode) {
     mode = newMode;
-    [addRedPlayerBtn, addBluePlayerBtn, drawBtn, eraserBtn].forEach(btn => btn.classList.remove('active'));
+    [addRedPlayerBtn, addBluePlayerBtn, addBallBtn, drawBtn, eraserBtn].forEach(btn => btn.classList.remove('active'));
     
     if (mode === 'redPlayer') {
         addRedPlayerBtn.classList.add('active');
         drawingCanvas.style.cursor = 'default';
     } else if (mode === 'bluePlayer') {
         addBluePlayerBtn.classList.add('active');
+        drawingCanvas.style.cursor = 'default';
+    } else if (mode === 'ball') {
+        addBallBtn.classList.add('active');
         drawingCanvas.style.cursor = 'default';
     } else if (mode === 'draw') {
         drawBtn.classList.add('active');
@@ -119,32 +125,42 @@ function setMode(newMode) {
 
 addRedPlayerBtn.addEventListener('click', () => setMode('redPlayer'));
 addBluePlayerBtn.addEventListener('click', () => setMode('bluePlayer'));
+addBallBtn.addEventListener('click', () => setMode('ball'));
 drawBtn.addEventListener('click', () => setMode('draw'));
 eraserBtn.addEventListener('click', () => setMode('erase'));
 
-// Add player
+// Add player or ball
 drawingCanvas.addEventListener('click', (e) => {
-    if (mode !== 'redPlayer' && mode !== 'bluePlayer') return;
+    if (mode !== 'redPlayer' && mode !== 'bluePlayer' && mode !== 'ball') return;
     
     const rect = drawingCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    addPlayerAtPosition(x, y);
+    if (mode === 'ball') {
+        addBallAtPosition(x, y);
+    } else {
+        addPlayerAtPosition(x, y);
+    }
 });
 
-// Touch support for adding players
+// Touch support for adding players or ball
 drawingCanvas.addEventListener('touchstart', (e) => {
-    if (mode !== 'redPlayer' && mode !== 'bluePlayer') return;
+    if (mode !== 'redPlayer' && mode !== 'bluePlayer' && mode !== 'ball') return;
     e.preventDefault();
+    e.stopPropagation();
     
     const rect = drawingCanvas.getBoundingClientRect();
     const touch = e.touches[0];
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
     
-    addPlayerAtPosition(x, y);
-});
+    if (mode === 'ball') {
+        addBallAtPosition(x, y);
+    } else {
+        addPlayerAtPosition(x, y);
+    }
+}, { passive: false });
 
 function addPlayerAtPosition(x, y) {
     let color, number;
@@ -163,6 +179,100 @@ function addPlayerAtPosition(x, y) {
     container.appendChild(player.element);
 }
 
+function addBallAtPosition(x, y) {
+    // Remove existing ball if any
+    if (ball) {
+        ball.remove();
+    }
+    
+    ball = createBall(x, y);
+    container.appendChild(ball);
+}
+
+function createBall(x, y) {
+    const div = document.createElement('div');
+    div.className = 'ball';
+    div.style.left = (x - 15) + 'px';
+    div.style.top = (y - 15) + 'px';
+    
+    let isDragging = false;
+    let offsetX, offsetY;
+    
+    // Mouse events
+    div.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isDragging = true;
+        offsetX = e.clientX - div.offsetLeft;
+        offsetY = e.clientY - div.offsetTop;
+        div.style.cursor = 'grabbing';
+    });
+    
+    // Touch events
+    div.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left - div.offsetLeft;
+        offsetY = touch.clientY - rect.top - div.offsetTop;
+    }, { passive: false });
+    
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        const rect = container.getBoundingClientRect();
+        let newX = e.clientX - rect.left - offsetX;
+        let newY = e.clientY - rect.top - offsetY;
+        
+        newX = Math.max(0, Math.min(newX, container.clientWidth - 30));
+        newY = Math.max(0, Math.min(newY, container.clientHeight - 30));
+        
+        div.style.left = newX + 'px';
+        div.style.top = newY + 'px';
+    };
+    
+    const handleTouchMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        let newX = touch.clientX - rect.left - offsetX;
+        let newY = touch.clientY - rect.top - offsetY;
+        
+        newX = Math.max(0, Math.min(newX, container.clientWidth - 30));
+        newY = Math.max(0, Math.min(newY, container.clientHeight - 30));
+        
+        div.style.left = newX + 'px';
+        div.style.top = newY + 'px';
+    };
+    
+    const handleMouseUp = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        div.style.cursor = 'move';
+    };
+    
+    const handleTouchEnd = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        isDragging = false;
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // Double click to remove
+    div.addEventListener('dblclick', () => {
+        div.remove();
+        ball = null;
+    });
+    
+    return div;
+}
+
 function createPlayer(x, y, number, color, team) {
     const div = document.createElement('div');
     div.className = 'player';
@@ -174,26 +284,30 @@ function createPlayer(x, y, number, color, team) {
     let isDragging = false;
     let offsetX, offsetY;
     
+    // Mouse events
     div.addEventListener('mousedown', (e) => {
         if (mode !== 'redPlayer' && mode !== 'bluePlayer') return;
+        e.preventDefault();
         isDragging = true;
         offsetX = e.clientX - div.offsetLeft;
         offsetY = e.clientY - div.offsetTop;
         div.style.cursor = 'grabbing';
     });
     
-    // Touch support for dragging
+    // Touch events
     div.addEventListener('touchstart', (e) => {
         if (mode !== 'redPlayer' && mode !== 'bluePlayer') return;
         e.preventDefault();
+        e.stopPropagation();
         isDragging = true;
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         offsetX = touch.clientX - rect.left - div.offsetLeft;
         offsetY = touch.clientY - rect.top - div.offsetTop;
-    });
+    }, { passive: false });
     
-    document.addEventListener('mousemove', (e) => {
+    // Mouse move
+    const handleMouseMove = (e) => {
         if (!isDragging) return;
         const rect = container.getBoundingClientRect();
         let newX = e.clientX - rect.left - offsetX;
@@ -204,12 +318,13 @@ function createPlayer(x, y, number, color, team) {
         
         div.style.left = newX + 'px';
         div.style.top = newY + 'px';
-    });
+    };
     
-    // Touch support for moving
-    document.addEventListener('touchmove', (e) => {
+    // Touch move
+    const handleTouchMove = (e) => {
         if (!isDragging) return;
         e.preventDefault();
+        e.stopPropagation();
         const touch = e.touches[0];
         const rect = container.getBoundingClientRect();
         let newX = touch.clientX - rect.left - offsetX;
@@ -220,17 +335,26 @@ function createPlayer(x, y, number, color, team) {
         
         div.style.left = newX + 'px';
         div.style.top = newY + 'px';
-    });
+    };
     
-    document.addEventListener('mouseup', () => {
+    // Mouse up
+    const handleMouseUp = () => {
+        if (!isDragging) return;
         isDragging = false;
         div.style.cursor = 'move';
-    });
+    };
     
-    // Touch support for release
-    document.addEventListener('touchend', () => {
+    // Touch end
+    const handleTouchEnd = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
         isDragging = false;
-    });
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
     
     // Double click to remove
     div.addEventListener('dblclick', () => {
@@ -244,10 +368,12 @@ function createPlayer(x, y, number, color, team) {
 // Drawing
 drawingCanvas.addEventListener('mousedown', startDrawing);
 drawingCanvas.addEventListener('touchstart', (e) => {
+    if (mode !== 'draw' && mode !== 'erase') return;
     e.preventDefault();
+    e.stopPropagation();
     const touch = e.touches[0];
     startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
-});
+}, { passive: false });
 
 function startDrawing(e) {
     if (mode !== 'draw' && mode !== 'erase') return;
@@ -265,10 +391,12 @@ function startDrawing(e) {
 
 drawingCanvas.addEventListener('mousemove', draw);
 drawingCanvas.addEventListener('touchmove', (e) => {
+    if (!isDrawing) return;
     e.preventDefault();
+    e.stopPropagation();
     const touch = e.touches[0];
     draw({ clientX: touch.clientX, clientY: touch.clientY });
-});
+}, { passive: false });
 
 function draw(e) {
     if (!isDrawing) return;
@@ -296,7 +424,7 @@ function draw(e) {
 }
 
 drawingCanvas.addEventListener('mouseup', stopDrawing);
-drawingCanvas.addEventListener('touchend', stopDrawing);
+drawingCanvas.addEventListener('touchend', stopDrawing, { passive: false });
 
 function stopDrawing() {
     if (!isDrawing) return;
@@ -353,6 +481,10 @@ clearBtn.addEventListener('click', () => {
         players = [];
         redPlayerCount = 0;
         bluePlayerCount = 0;
+        if (ball) {
+            ball.remove();
+            ball = null;
+        }
     }
 });
 
@@ -367,3 +499,10 @@ undoBtn.addEventListener('click', () => {
 // Initialize
 window.addEventListener('load', resizeCanvas);
 window.addEventListener('resize', resizeCanvas);
+
+// Call immediately in case DOM is already loaded
+if (document.readyState === 'complete') {
+    resizeCanvas();
+} else {
+    document.addEventListener('DOMContentLoaded', resizeCanvas);
+}
