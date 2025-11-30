@@ -33,6 +33,16 @@ h1 {
     text-align: center;
     margin-bottom: 15px;
     font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
 }
 
 .toolbar {
@@ -136,20 +146,60 @@ canvas {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+    
+    .container {
+        border-radius: 0;
     h1 {
-        font-size: 1.5em;
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    
+    .logo {
+        height: 30px;
     }
     
     .toolbar {
-        font-size: 12px;
+    header {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+    
+    .toolbar {
+        gap: 5px;
+        font-size: 11px;
     }
     
     button {
-        padding: 8px 15px;
-        font-size: 12px;
+        padding: 8px 12px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+    
+    select {
+        padding: 8px;
+        font-size: 11px;
+    }
+    
+    input[type="range"] {
+        width: 60px;
     }
     
     .canvas-container {
-        height: 400px;
+        flex: 1;
+        height: auto;
+        touch-action: none;
+    }
+    
+    .player {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
     }
 }

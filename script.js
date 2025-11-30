@@ -130,6 +130,23 @@ drawingCanvas.addEventListener('click', (e) => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    addPlayerAtPosition(x, y);
+});
+
+// Touch support for adding players
+drawingCanvas.addEventListener('touchstart', (e) => {
+    if (mode !== 'redPlayer' && mode !== 'bluePlayer') return;
+    e.preventDefault();
+    
+    const rect = drawingCanvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    addPlayerAtPosition(x, y);
+});
+
+function addPlayerAtPosition(x, y) {
     let color, number;
     if (mode === 'redPlayer') {
         redPlayerCount++;
@@ -144,7 +161,7 @@ drawingCanvas.addEventListener('click', (e) => {
     const player = createPlayer(x, y, number, color, mode);
     players.push(player);
     container.appendChild(player.element);
-});
+}
 
 function createPlayer(x, y, number, color, team) {
     const div = document.createElement('div');
@@ -165,6 +182,17 @@ function createPlayer(x, y, number, color, team) {
         div.style.cursor = 'grabbing';
     });
     
+    // Touch support for dragging
+    div.addEventListener('touchstart', (e) => {
+        if (mode !== 'redPlayer' && mode !== 'bluePlayer') return;
+        e.preventDefault();
+        isDragging = true;
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left - div.offsetLeft;
+        offsetY = touch.clientY - rect.top - div.offsetTop;
+    });
+    
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         const rect = container.getBoundingClientRect();
@@ -178,9 +206,30 @@ function createPlayer(x, y, number, color, team) {
         div.style.top = newY + 'px';
     });
     
+    // Touch support for moving
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        let newX = touch.clientX - rect.left - offsetX;
+        let newY = touch.clientY - rect.top - offsetY;
+        
+        newX = Math.max(0, Math.min(newX, container.clientWidth - 35));
+        newY = Math.max(0, Math.min(newY, container.clientHeight - 35));
+        
+        div.style.left = newX + 'px';
+        div.style.top = newY + 'px';
+    });
+    
     document.addEventListener('mouseup', () => {
         isDragging = false;
         div.style.cursor = 'move';
+    });
+    
+    // Touch support for release
+    document.addEventListener('touchend', () => {
+        isDragging = false;
     });
     
     // Double click to remove
@@ -193,7 +242,14 @@ function createPlayer(x, y, number, color, team) {
 }
 
 // Drawing
-drawingCanvas.addEventListener('mousedown', (e) => {
+drawingCanvas.addEventListener('mousedown', startDrawing);
+drawingCanvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+});
+
+function startDrawing(e) {
     if (mode !== 'draw' && mode !== 'erase') return;
     isDrawing = true;
     currentPath = [];
@@ -205,9 +261,16 @@ drawingCanvas.addEventListener('mousedown', (e) => {
     drawingCtx.beginPath();
     drawingCtx.moveTo(x, y);
     currentPath.push({ x, y });
+}
+
+drawingCanvas.addEventListener('mousemove', draw);
+drawingCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    draw({ clientX: touch.clientX, clientY: touch.clientY });
 });
 
-drawingCanvas.addEventListener('mousemove', (e) => {
+function draw(e) {
     if (!isDrawing) return;
     
     const rect = drawingCanvas.getBoundingClientRect();
@@ -230,9 +293,12 @@ drawingCanvas.addEventListener('mousemove', (e) => {
     drawingCtx.stroke();
     
     currentPath.push({ x, y });
-});
+}
 
-drawingCanvas.addEventListener('mouseup', () => {
+drawingCanvas.addEventListener('mouseup', stopDrawing);
+drawingCanvas.addEventListener('touchend', stopDrawing);
+
+function stopDrawing() {
     if (!isDrawing) return;
     isDrawing = false;
     
@@ -244,7 +310,7 @@ drawingCanvas.addEventListener('mouseup', () => {
             mode: mode
         });
     }
-});
+}
 
 // Redraw all paths
 function redrawAll() {
