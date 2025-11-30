@@ -11,63 +11,54 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0;
-    margin: 0;
-    overflow: hidden;
-    touch-action: none;
-    -webkit-user-select: none;
-    user-select: none;
+    padding: 20px;
 }
 
 .container {
     background: white;
-    border-radius: 0;
-    box-shadow: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    max-width: 1100px;
+    width: 100%;
 }
 
 header {
     background: linear-gradient(135deg, #2c5f2d 0%, #3a7f3b 100%);
     color: white;
-    padding: 10px;
-    flex-shrink: 0;
+    padding: 20px;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 8px;
-    font-size: 1.3em;
+    margin-bottom: 15px;
+    font-size: 2em;
 }
 
 .toolbar {
     display: flex;
-    gap: 5px;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
 }
 
 button {
-    padding: 8px 12px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background: white;
     color: #2c5f2d;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 11px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    transition: all 0.3s;
+    font-size: 14px;
 }
 
-button:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+button:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 button.active {
@@ -81,29 +72,26 @@ button.active {
 }
 
 select {
-    padding: 8px;
+    padding: 10px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
     background: white;
     color: #2c5f2d;
-    font-size: 11px;
 }
 
 input[type="range"] {
-    width: 80px;
+    width: 100px;
     cursor: pointer;
-    height: 30px;
 }
 
 .canvas-container {
     position: relative;
     width: 100%;
-    flex: 1;
+    height: 600px;
     background: #2d7a2e;
     overflow: hidden;
-    touch-action: none;
 }
 
 canvas {
@@ -125,8 +113,8 @@ canvas {
 
 .player {
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: #ff0000;
     border: 3px solid white;
@@ -135,17 +123,33 @@ canvas {
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 16px;
     cursor: move;
     user-select: none;
     z-index: 3;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    touch-action: none;
 }
 
-.player:active {
-    transform: scale(1.15);
+.player:hover {
+    transform: scale(1.1);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.5em;
+    }
+    
+    .toolbar {
+        font-size: 12px;
+    }
+    
+    button {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+    
+    .canvas-container {
+        height: 400px;
+    }
+}
