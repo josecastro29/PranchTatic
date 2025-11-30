@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prancheta Tática - Futebol</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚽ Prancheta Tática</h1>
+            <div class="toolbar">
+                <button id="clearBtn" title="Limpar tudo">🗑️ Limpar</button>
+                <button id="undoBtn" title="Desfazer">↶ Desfazer</button>
+                <button id="addRedPlayerBtn" class="active team-btn">🔴 Equipa Vermelha</button>
+                <button id="addBluePlayerBtn" class="team-btn">🔵 Equipa Azul</button>
+                <button id="drawBtn">✏️ Desenhar</button>
+                <button id="eraserBtn">🧹 Borracha</button>
+                <select id="colorPicker">
+                    <option value="#ff0000">🔴 Vermelho</option>
+                    <option value="#0000ff">🔵 Azul</option>
+                    <option value="#ffff00">🟡 Amarelo</option>
+                    <option value="#00ff00">🟢 Verde</option>
+                    <option value="#ffffff" selected>⚪ Branco</option>
+                    <option value="#000000">⚫ Preto</option>
+                </select>
+                <input type="range" id="brushSize" min="1" max="10" value="3" title="Tamanho do pincel">
+            </div>
+        </header>
+        
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+            <canvas id="fieldCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
